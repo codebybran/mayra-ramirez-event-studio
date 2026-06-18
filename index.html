@@ -24,15 +24,26 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=4" />
+  <link rel="stylesheet" href="css/styles.css?v=5" />
 </head>
 <body>
 
   <nav class="navbar" id="navbar" role="navigation" aria-label="Navegación principal">
     <div class="nav-container">
       <a href="#inicio" class="nav-logo">
-        <span class="logo-mayra">Mayra Ramírez</span>
-        <span class="logo-studio">EVENT STUDIO</span>
+        <svg class="logo-monogram" viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" stroke-width="1"/>
+          <g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M 20 68 L 20 30 L 34 50 L 48 30" />
+            <path d="M 48 30 L 62 68" />
+            <path d="M 40 56 L 56 56" />
+            <path d="M 68 68 L 68 30 L 80 30 Q 86 30 86 39 Q 86 48 80 48 L 68 48 M 74 48 L 86 68" />
+          </g>
+        </svg>
+        <span class="logo-text">
+          <span class="logo-mayra">Mayra Ramírez</span>
+          <span class="logo-studio">EVENT STUDIO</span>
+        </span>
       </a>
       <button class="nav-toggle" id="navToggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="navMenu">
         <span></span><span></span><span></span>
@@ -57,17 +68,37 @@
     <div class="hero-bg">
       <div class="hero-particles" id="particles"></div>
       <div class="hero-gradient"></div>
-      <div class="hero-orb hero-orb-1" data-depth="0.03"></div>
-      <div class="hero-orb hero-orb-2" data-depth="0.06"></div>
-      <div class="hero-orb hero-orb-3" data-depth="0.02"></div>
+      <div class="hero-grid" aria-hidden="true"></div>
+      <div class="hero-orb hero-orb-1" data-depth="0.04"></div>
+      <div class="hero-orb hero-orb-2" data-depth="0.08"></div>
+      <div class="hero-orb hero-orb-3" data-depth="0.03"></div>
+      <svg class="hero-ring hero-ring-1" data-depth="0.05" viewBox="0 0 200 200" aria-hidden="true">
+        <circle cx="100" cy="100" r="90" fill="none" stroke="currentColor" stroke-width="0.6"/>
+        <circle cx="100" cy="100" r="70" fill="none" stroke="currentColor" stroke-width="0.4"/>
+      </svg>
+      <svg class="hero-ring hero-ring-2" data-depth="0.07" viewBox="0 0 200 200" aria-hidden="true">
+        <circle cx="100" cy="100" r="90" fill="none" stroke="currentColor" stroke-width="0.6"/>
+      </svg>
     </div>
     <div class="hero-content" id="heroContent">
+      <div class="hero-monogram-wrap">
+        <svg class="hero-monogram" viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" stroke-width="0.7"/>
+          <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M 20 68 L 20 30 L 34 50 L 48 30" />
+            <path d="M 48 30 L 62 68" />
+            <path d="M 40 56 L 56 56" />
+            <path d="M 68 68 L 68 30 L 80 30 Q 86 30 86 39 Q 86 48 80 48 L 68 48 M 74 48 L 86 68" />
+          </g>
+        </svg>
+      </div>
       <p class="hero-eyebrow">El Cerrito · Valle del Cauca · Colombia</p>
       <h1 class="hero-title">
         <span class="hero-title-main">Mayra Ramírez</span>
         <span class="hero-title-sub">EVENT STUDIO</span>
       </h1>
       <p class="hero-tagline">Transformamos tus momentos especiales<br>en experiencias que perduran para siempre</p>
+      <p class="hero-slogan">Seriedad · Responsabilidad · Oportunidad</p>
       <div class="hero-actions">
         <a href="#contacto" class="btn btn-gold">Solicitar cotización</a>
         <a href="#portafolio" class="btn btn-outline">Ver portafolio</a>
@@ -651,6 +682,6 @@
   }
   </script>
 
-  <script src="js/app.js?v=4"></script>
+  <script src="js/app.js?v=5"></script>
 </body>
 </html>

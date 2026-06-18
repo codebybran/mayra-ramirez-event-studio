@@ -442,34 +442,50 @@ function initTiltCards() {
 /* ─── 13. PARALLAX SUTIL EN EL HERO ──────────────── */
 function initHeroParallax() {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  if (window.matchMedia('(max-width: 700px)').matches) return;
+  if (window.matchMedia('(max-width: 900px)').matches) return;
 
   const hero = $('.hero');
   const heroContent = $('#heroContent');
   const orbs = $$('.hero-orb');
+  const rings = $$('.hero-ring');
   if (!hero) return;
+
+  hero.style.perspective = '1200px';
 
   hero.addEventListener('mousemove', e => {
     const rect = hero.getBoundingClientRect();
     const px = (e.clientX - rect.left) / rect.width - 0.5;   // -0.5 a 0.5
     const py = (e.clientY - rect.top)  / rect.height - 0.5;
 
-    // Contenido principal se mueve muy sutil, en dirección opuesta al mouse
+    // Contenido principal: tilt 3D notorio + traslación
     if (heroContent) {
-      heroContent.style.transform = `translate(${px * -10}px, ${py * -8}px)`;
+      const tiltX = py * -6;   // grados
+      const tiltY = px * 8;
+      heroContent.style.transform =
+        `perspective(1200px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translate(${px * -16}px, ${py * -12}px)`;
     }
 
     // Orbes se mueven según su profundidad individual (data-depth)
     orbs.forEach(orb => {
       const depth = parseFloat(orb.dataset.depth) || 0.03;
-      const moveX = px * depth * 400;
-      const moveY = py * depth * 400;
-      orb.style.transform = `translate(${moveX}px, ${moveY}px)`;
+      const moveX = px * depth * 600;
+      const moveY = py * depth * 600;
+      orb.style.transform = `translate(${moveX}px, ${moveY}px) scale(${1 + Math.abs(px * py) * 0.3})`;
+    });
+
+    // Anillos: traslación adicional sobre su rotación CSS (usamos un wrapper de translate)
+    rings.forEach(ring => {
+      const depth = parseFloat(ring.dataset.depth) || 0.05;
+      const moveX = px * depth * 500;
+      const moveY = py * depth * 500;
+      ring.style.marginLeft = `${moveX}px`;
+      ring.style.marginTop  = `${moveY}px`;
     });
   });
 
   hero.addEventListener('mouseleave', () => {
-    if (heroContent) heroContent.style.transform = 'translate(0, 0)';
-    orbs.forEach(orb => { orb.style.transform = 'translate(0, 0)'; });
+    if (heroContent) heroContent.style.transform = 'perspective(1200px) rotateX(0deg) rotateY(0deg) translate(0,0)';
+    orbs.forEach(orb => { orb.style.transform = 'translate(0, 0) scale(1)'; });
+    rings.forEach(ring => { ring.style.marginLeft = '0'; ring.style.marginTop = '0'; });
   });
 }
