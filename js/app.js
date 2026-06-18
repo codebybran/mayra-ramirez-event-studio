@@ -8,6 +8,7 @@ const $ = (sel, ctx = document) => ctx.querySelector(sel);
 const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
 document.addEventListener('DOMContentLoaded', () => {
+  initThemeToggle();
   initParticles();
   initNavbar();
   initScrollReveal();
@@ -16,6 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initScrollTop();
   initFooterYear();
   initSmoothScroll();   // al final, separado y controlado
+  initTiltCards();
+  initHeroParallax();
   if ($('#carousel')) initCarousel();
   if ($('#lightbox'))  initLightbox();
 });
@@ -335,7 +338,7 @@ function initContactForm() {
 
     // Abrir WhatsApp INMEDIATAMENTE (sin setTimeout para evitar bloqueo del navegador)
     const urlWA = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(textoWA)}`;
-    window.location.href = urlWA;
+    window.open(urlWA, '_blank', 'noopener');
 
     // Limpiar formulario
     form.reset();
@@ -382,5 +385,91 @@ function initSmoothScroll() {
         behavior: 'smooth'
       });
     });
+  });
+}
+
+/* ─── 11. TOGGLE DE TEMA (claro / oscuro) ────────── */
+function initThemeToggle() {
+  const btn  = $('#themeToggle');
+  if (!btn) return;
+  const root = document.documentElement;
+
+  function applyLabel() {
+    const isLight = root.getAttribute('data-theme') === 'light';
+    btn.setAttribute('aria-label', isLight ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro');
+  }
+  applyLabel();
+
+  btn.addEventListener('click', () => {
+    const isLight = root.getAttribute('data-theme') === 'light';
+    const next = isLight ? 'dark' : 'light';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('mr-theme', next); } catch (e) { /* almacenamiento no disponible */ }
+    applyLabel();
+  });
+}
+
+/* ─── 12. TILT 3D EN TARJETAS ────────────────────── */
+function initTiltCards() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (window.matchMedia('(max-width: 700px)').matches) return; // sin tilt en móvil (sin mouse)
+
+  const cards = $$('.tilt-card');
+  const MAX_TILT = 8; // grados
+
+  cards.forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const px = x / rect.width;   // 0 a 1
+      const py = y / rect.height;  // 0 a 1
+
+      const tiltX = (py - 0.5) * -MAX_TILT * 2;
+      const tiltY = (px - 0.5) *  MAX_TILT * 2;
+
+      card.style.transform = `perspective(800px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translateY(-4px)`;
+      card.style.setProperty('--mx', `${px * 100}%`);
+      card.style.setProperty('--my', `${py * 100}%`);
+    });
+
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg) translateY(0)';
+    });
+  });
+}
+
+/* ─── 13. PARALLAX SUTIL EN EL HERO ──────────────── */
+function initHeroParallax() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (window.matchMedia('(max-width: 700px)').matches) return;
+
+  const hero = $('.hero');
+  const heroContent = $('#heroContent');
+  const orbs = $$('.hero-orb');
+  if (!hero) return;
+
+  hero.addEventListener('mousemove', e => {
+    const rect = hero.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width - 0.5;   // -0.5 a 0.5
+    const py = (e.clientY - rect.top)  / rect.height - 0.5;
+
+    // Contenido principal se mueve muy sutil, en dirección opuesta al mouse
+    if (heroContent) {
+      heroContent.style.transform = `translate(${px * -10}px, ${py * -8}px)`;
+    }
+
+    // Orbes se mueven según su profundidad individual (data-depth)
+    orbs.forEach(orb => {
+      const depth = parseFloat(orb.dataset.depth) || 0.03;
+      const moveX = px * depth * 400;
+      const moveY = py * depth * 400;
+      orb.style.transform = `translate(${moveX}px, ${moveY}px)`;
+    });
+  });
+
+  hero.addEventListener('mouseleave', () => {
+    if (heroContent) heroContent.style.transform = 'translate(0, 0)';
+    orbs.forEach(orb => { orb.style.transform = 'translate(0, 0)'; });
   });
 }

@@ -46,6 +46,44 @@
   --shadow-gold:   0 8px 32px rgba(201,168,76,.25);
 }
 
+/* ─── TEMAS: OSCURO (default) Y CLARO ────────────── */
+:root,
+[data-theme="dark"] {
+  --bg-page:        var(--off-white);
+  --bg-surface:     var(--white);
+  --bg-surface-2:   var(--gray-100);
+  --bg-deep:        var(--navy);
+  --bg-deep-mid:    var(--navy-mid);
+  --bg-deep-light:  var(--navy-light);
+  --text-primary:   var(--navy);
+  --text-body:      var(--gray-600);
+  --text-on-deep:   var(--white);
+  --text-on-deep-soft: rgba(255,255,255,.55);
+  --border-soft:    var(--gray-200);
+  --card-bg:        var(--white);
+  --shadow-color:   rgba(10,22,40,.12);
+}
+
+[data-theme="light"] {
+  --bg-page:        #fbfaf8;
+  --bg-surface:     #ffffff;
+  --bg-surface-2:   #f3f1ec;
+  --bg-deep:        #f0ede5;
+  --bg-deep-mid:    #e8e3d8;
+  --bg-deep-light:  #ded6c5;
+  --text-primary:   #1a1610;
+  --text-body:      #5c5448;
+  --text-on-deep:   #1a1610;
+  --text-on-deep-soft: rgba(26,22,16,.6);
+  --border-soft:    #e4ddd0;
+  --card-bg:        #ffffff;
+  --shadow-color:   rgba(60,50,30,.1);
+  --gold:           #a8843a;
+  --gold-light:     #c9a84c;
+}
+
+body { background: var(--bg-page); transition: background var(--dur-slow) var(--ease); }
+
 /* ─── RESET & BASE ───────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -680,9 +718,14 @@ address { font-style: normal; }
 
 .servicio-card:hover,
 .servicio-card:focus {
-  transform: translateY(-6px);
   box-shadow: var(--shadow-lg);
   border-color: rgba(201,168,76,.3);
+}
+
+/* Sin JS de tilt activo (móvil / reduced-motion), usar el translateY clásico */
+@media (max-width: 700px), (prefers-reduced-motion: reduce) {
+  .servicio-card:hover,
+  .servicio-card:focus { transform: translateY(-6px); }
 }
 
 .servicio-card:hover::before,
@@ -2023,4 +2066,245 @@ address { font-style: normal; }
 /* Responsive galería instrucciones */
 @media (max-width: 700px) {
   .galeria-instrucciones { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════════════
+   MODO CLARO — overrides de secciones con fondo oscuro
+═══════════════════════════════════════════════════ */
+[data-theme="light"] .nosotros,
+[data-theme="light"] .faq,
+[data-theme="light"] .testimonios,
+[data-theme="light"] .portafolio { background: var(--bg-surface-2); }
+
+[data-theme="light"] .servicios,
+[data-theme="light"] .proceso,
+[data-theme="light"] .contacto { background: var(--bg-surface); }
+
+[data-theme="light"] .estadisticas,
+[data-theme="light"] .galeria {
+  background: var(--bg-deep);
+}
+[data-theme="light"] .galeria .section-title,
+[data-theme="light"] .instruccion-card h3 { color: var(--text-primary); }
+[data-theme="light"] .galeria .section-subtitle,
+[data-theme="light"] .instruccion-card p { color: var(--text-body); }
+[data-theme="light"] .instruccion-card {
+  background: rgba(0,0,0,.03);
+  border-color: rgba(168,132,58,.25);
+}
+[data-theme="light"] .instruccion-num { color: rgba(168,132,58,.25); }
+[data-theme="light"] .instruccion-card code {
+  background: rgba(168,132,58,.12);
+  color: #8a6a28;
+  border-color: rgba(168,132,58,.25);
+}
+
+[data-theme="light"] .navbar.scrolled {
+  background: rgba(251,250,248,.92);
+  box-shadow: 0 4px 24px rgba(60,50,30,.08);
+}
+[data-theme="light"] .logo-mayra,
+[data-theme="light"] .nav-link { color: var(--text-primary); }
+[data-theme="light"] .nav-toggle span { background: var(--text-primary); }
+
+[data-theme="light"] .hero-bg { background: var(--bg-deep); }
+[data-theme="light"] .hero-title-main,
+[data-theme="light"] .hero-tagline { color: var(--text-primary); }
+[data-theme="light"] .hero-stat-label,
+[data-theme="light"] .hero-scroll-text { color: var(--text-body); }
+[data-theme="light"] .btn-outline { color: var(--text-primary); border-color: rgba(26,22,16,.25); }
+[data-theme="light"] .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+
+[data-theme="light"] .footer,
+[data-theme="light"] .estadisticas { background: var(--bg-deep); }
+[data-theme="light"] .footer-tagline,
+[data-theme="light"] .footer-links a,
+[data-theme="light"] .footer-address p,
+[data-theme="light"] .footer-address a,
+[data-theme="light"] .footer-copy,
+[data-theme="light"] .footer-location { color: var(--text-body); }
+[data-theme="light"] .footer-bottom { border-top-color: rgba(26,22,16,.1); }
+[data-theme="light"] .social-link { border-color: rgba(26,22,16,.15); color: var(--text-body); }
+
+[data-theme="light"] .testimonios-vacio { background: var(--bg-surface); border-color: var(--border-soft); }
+[data-theme="light"] .portafolio-vacio .btn-gold,
+[data-theme="light"] .contacto-form-wrapper { background: var(--bg-surface-2); border-color: var(--border-soft); }
+
+/* ═══════════════════════════════════════════════════
+   TOGGLE DE TEMA (interruptor claro/oscuro)
+═══════════════════════════════════════════════════ */
+.theme-toggle {
+  position: relative;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+  background: rgba(201,168,76,.1);
+  border: 1.5px solid rgba(201,168,76,.25);
+  margin-left: .5rem;
+  transition: background var(--dur) var(--ease), transform var(--dur) var(--ease), border-color var(--dur);
+  flex-shrink: 0;
+}
+
+.theme-toggle:hover {
+  background: rgba(201,168,76,.18);
+  transform: rotate(15deg) scale(1.05);
+}
+
+.theme-toggle svg {
+  position: absolute;
+  transition: opacity .3s var(--ease), transform .4s var(--ease-out);
+}
+
+.icon-sun  { opacity: 0; transform: scale(.4) rotate(-90deg); }
+.icon-moon { opacity: 1; transform: scale(1) rotate(0deg); }
+
+[data-theme="light"] .icon-sun  { opacity: 1; transform: scale(1) rotate(0deg); }
+[data-theme="light"] .icon-moon { opacity: 0; transform: scale(.4) rotate(90deg); }
+
+[data-theme="light"] .theme-toggle {
+  background: rgba(168,132,58,.12);
+  border-color: rgba(168,132,58,.3);
+}
+
+/* ═══════════════════════════════════════════════════
+   ORBES FLOTANTES PARALLAX (hero)
+═══════════════════════════════════════════════════ */
+.hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+  opacity: .5;
+  will-change: transform;
+  transition: transform .15s linear;
+}
+
+.hero-orb-1 {
+  width: 320px; height: 320px;
+  top: 8%; left: 8%;
+  background: radial-gradient(circle, rgba(201,168,76,.35), transparent 70%);
+}
+
+.hero-orb-2 {
+  width: 260px; height: 260px;
+  bottom: 12%; right: 10%;
+  background: radial-gradient(circle, rgba(26,53,96,.5), transparent 70%);
+}
+
+.hero-orb-3 {
+  width: 180px; height: 180px;
+  top: 45%; right: 22%;
+  background: radial-gradient(circle, rgba(201,168,76,.25), transparent 70%);
+}
+
+[data-theme="light"] .hero-orb-1 { background: radial-gradient(circle, rgba(168,132,58,.3), transparent 70%); }
+[data-theme="light"] .hero-orb-2 { background: radial-gradient(circle, rgba(168,132,58,.18), transparent 70%); }
+[data-theme="light"] .hero-orb-3 { background: radial-gradient(circle, rgba(168,132,58,.22), transparent 70%); }
+
+@media (max-width: 700px) {
+  .hero-orb { display: none; } /* desactivado en móvil: sin mouse, sin sentido, ahorra batería */
+}
+
+/* ═══════════════════════════════════════════════════
+   TILT 3D — tarjetas con inclinación al pasar el mouse
+═══════════════════════════════════════════════════ */
+.tilt-card {
+  transform-style: preserve-3d;
+  transition: transform .15s ease-out, box-shadow var(--dur) var(--ease);
+  will-change: transform;
+}
+
+.tilt-card .servicio-icon,
+.tilt-card .instruccion-num {
+  transition: transform .2s ease-out;
+}
+
+/* El brillo que sigue al mouse */
+.tilt-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.tilt-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle 180px at var(--mx, 50%) var(--my, 50%), rgba(201,168,76,.16), transparent 70%);
+  opacity: 0;
+  transition: opacity .3s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.tilt-card:hover .tilt-glow,
+.tilt-card:focus .tilt-glow { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce), (max-width: 700px) {
+  .tilt-card { transform: none !important; }
+}
+
+/* ═══════════════════════════════════════════════════
+   BOTONES CON PROFUNDIDAD (efecto "press")
+═══════════════════════════════════════════════════ */
+.btn {
+  position: relative;
+  transform: translateY(0) scale(1);
+  box-shadow: 0 4px 0 0 rgba(0,0,0,.18), var(--shadow-gold);
+  transition: transform .12s ease, box-shadow .12s ease, background var(--dur) var(--ease);
+}
+
+.btn-gold {
+  box-shadow: 0 4px 0 0 rgba(122,95,20,.55), 0 8px 24px rgba(201,168,76,.25);
+}
+
+.btn-gold:hover {
+  box-shadow: 0 5px 0 0 rgba(122,95,20,.55), 0 12px 32px rgba(201,168,76,.35);
+  transform: translateY(-1px);
+}
+
+.btn-gold:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 0 rgba(122,95,20,.55), 0 4px 12px rgba(201,168,76,.25);
+}
+
+.btn-outline {
+  box-shadow: 0 4px 0 0 rgba(255,255,255,.08);
+}
+
+.btn-outline:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 0 0 rgba(255,255,255,.1);
+}
+
+.btn-outline:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 0 rgba(255,255,255,.08);
+}
+
+[data-theme="light"] .btn-outline { box-shadow: 0 4px 0 0 rgba(0,0,0,.08); }
+[data-theme="light"] .btn-outline:hover { box-shadow: 0 5px 0 0 rgba(0,0,0,.1); }
+[data-theme="light"] .btn-outline:active { box-shadow: 0 1px 0 0 rgba(0,0,0,.08); }
+
+/* Filtros y carousel buttons también con press effect */
+.filter-btn, .carousel-btn, .accordion-trigger, .social-link {
+  transition: transform .12s ease, background var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur);
+}
+.filter-btn:active, .carousel-btn:active, .social-link:active { transform: scale(.93); }
+
+/* Whatsapp flotante con press */
+.whatsapp-float { transition: transform .15s ease, box-shadow var(--dur) var(--ease); }
+.whatsapp-float:active { transform: scale(.92); }
+
+/* ═══════════════════════════════════════════════════
+   PROFUNDIDAD SUAVE EN HERO CONTENT (parallax leve)
+═══════════════════════════════════════════════════ */
+#heroContent {
+  transition: transform .1s linear;
+  will-change: transform;
+}
+
+@media (max-width: 700px) {
+  #heroContent { transform: none !important; }
 }
