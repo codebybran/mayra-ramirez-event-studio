@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initSmoothScroll();   // al final, separado y controlado
   initTiltCards();
   initHeroParallax();
+  initSecretMenu();
   if ($('#carousel')) initCarousel();
   if ($('#lightbox'))  initLightbox();
 });
@@ -440,6 +441,36 @@ function initTiltCards() {
 }
 
 /* ─── 13. PARALLAX SUTIL EN EL HERO ──────────────── */
+
+/* ─── 14. EASTER EGG — 5 clics en el logo activa menú privado ── */
+function initSecretMenu() {
+  const logo = document.querySelector('.nav-logo');
+  if (!logo) return;
+
+  let clicks = 0;
+  let timer;
+
+  logo.addEventListener('click', (e) => {
+    e.preventDefault();
+    clicks++;
+    clearTimeout(timer);
+
+    if (clicks >= 5) {
+      clicks = 0;
+      // Mostrar botones privados
+      document.querySelectorAll('.nav-private').forEach(el => {
+        el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+      });
+      // Feedback visual sutil
+      logo.style.filter = 'drop-shadow(0 0 12px rgba(201,168,76,.9))';
+      setTimeout(() => { logo.style.filter = ''; }, 800);
+    }
+
+    // Reset si pasan 2 segundos sin clic
+    timer = setTimeout(() => { clicks = 0; }, 2000);
+  });
+}
+
 function initHeroParallax() {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   if (window.matchMedia('(max-width: 900px)').matches) return;
