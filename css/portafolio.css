@@ -150,3 +150,10 @@
   .porto-modal-video { padding: 0 1.25rem 1.25rem; }
   .porto-gallery-thumb { width: 52px; height: 40px; }
 }
+
+.porto-modal-videos {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-bottom: 1.75rem;
+}

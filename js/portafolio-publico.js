@@ -180,18 +180,36 @@ function renderizarPortafolio(contenedor, eventos) {
       </div>
 
       <!-- Video de YouTube -->
-      ${ev.videoUrl ? `
-        <div class="porto-modal-video">
-          <iframe
-            src="${ev.videoUrl}?rel=0&modestbranding=1"
-            title="Video de ${escapeHtml(ev.nombre)}"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen
-            loading="lazy"
-          ></iframe>
-        </div>
-      ` : ''}
+      ${(ev.videos && ev.videos.length > 0) ? `
+  <div class="porto-modal-videos">
+    ${ev.videos.map((url, i) => `
+      <div class="porto-modal-video">
+        <p style="font-family:var(--font-display);font-size:1rem;color:var(--navy);margin-bottom:.5rem;padding:0 1.75rem;">
+          🎬 Video ${ev.videos.length > 1 ? i + 1 : ''}
+        </p>
+        <iframe
+          src="${url}?rel=0&modestbranding=1"
+          title="Video ${i+1} de ${escapeHtml(ev.nombre)}"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+          loading="lazy"
+        ></iframe>
+      </div>
+    `).join('')}
+  </div>
+` : ev.videoUrl ? `
+  <div class="porto-modal-video">
+    <iframe
+      src="${ev.videoUrl}?rel=0&modestbranding=1"
+      title="Video de ${escapeHtml(ev.nombre)}"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+      loading="lazy"
+    ></iframe>
+  </div>
+` : ''}
     `;
 
     // Galería de miniaturas funcional
@@ -217,7 +235,7 @@ function crearTarjetaHTML(ev) {
   const fechaFmt = formatearFecha(ev.fecha);
   const emoji    = tipoEmoji[ev.tipo] || '✨';
   const nFotos   = (ev.fotos || []).length;
-  const tieneVid = !!ev.videoUrl;
+  const tieneVid = (ev.videos && ev.videos.length > 0) || !!ev.videoUrl;
 
   return `
     <article

@@ -134,7 +134,7 @@ fotoUploadArea.addEventListener('drop', e => {
 });
 
 function agregarFotos(files) {
-  const MAX_FOTOS = 10;
+  const MAX_FOTOS = 50;
   const MAX_SIZE  = 10 * 1024 * 1024; // 10 MB
 
   Array.from(files).forEach(file => {
@@ -263,7 +263,7 @@ guardarEventoBtn.addEventListener('click', async () => {
     }
 
     // 2. Procesar URL de YouTube
-    const videoUrl = procesarUrlYoutube(eVideoUrl.value.trim());
+    const videoUrl = procesarUrlYoutube(eVideoUrl.value);
 
     // 3. Guardar en Firestore
     const datos = {
@@ -327,12 +327,14 @@ function limpiarFormulario() {
 // YOUTUBE — convertir cualquier formato a embed
 // ═══════════════════════════════════════════════════════
 
-function procesarUrlYoutube(url) {
-  if (!url) return '';
-  // Soporta: youtube.com/watch?v=ID, youtu.be/ID, youtube.com/shorts/ID
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{11})/);
-  if (!match) return url; // si no es YouTube, guardarlo igual
-  return `https://www.youtube.com/embed/${match[1]}`;
+function procesarUrlYoutube(texto) {
+  if (!texto) return [];
+  const lineas = texto.split('\n').map(l => l.trim()).filter(Boolean);
+  return lineas.map(url => {
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{11})/);
+    if (!match) return null;
+    return `https://www.youtube.com/embed/${match[1]}`;
+  }).filter(Boolean);
 }
 
 // ═══════════════════════════════════════════════════════
