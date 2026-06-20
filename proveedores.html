@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a1628" />
+  <meta name="robots" content="noindex, nofollow" />
+  <script>
+    (function() {
+      var saved = localStorage.getItem('mr-theme');
+      if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    })();
+  </script>
+  <title>Panel de Proveedores | Mayra Ramírez Event Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css?v=8" />
+  <link rel="stylesheet" href="css/proveedores.css?v=1" />
+</head>
+<body>
+
+  <nav class="navbar scrolled" id="navbar" role="navigation" aria-label="Navegación principal">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo">
+        <svg class="logo-monogram" viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" stroke-width="1"/>
+          <g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M 20 68 L 20 30 L 34 50 L 48 30" />
+            <path d="M 48 30 L 62 68" />
+            <path d="M 40 56 L 56 56" />
+            <path d="M 68 68 L 68 30 L 80 30 Q 86 30 86 39 Q 86 48 80 48 L 68 48 M 74 48 L 86 68" />
+          </g>
+        </svg>
+        <span class="logo-text">
+          <span class="logo-mayra">Mayra Ramírez</span>
+          <span class="logo-studio">EVENT STUDIO</span>
+        </span>
+      </a>
+      <ul class="nav-menu" role="menubar" style="display:flex;">
+        <li role="none"><a href="index.html" role="menuitem" class="nav-link">← Volver al sitio</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════
+       PANTALLA DE LOGIN — visible por defecto
+  ═══════════════════════════════════════════════ -->
+  <section class="prov-login-screen" id="loginScreen">
+    <div class="prov-login-card">
+      <svg class="prov-login-mono" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M 20 68 L 20 30 L 34 50 L 48 30"/>
+          <path d="M 48 30 L 62 68"/>
+          <path d="M 40 56 L 56 56"/>
+          <path d="M 68 68 L 68 30 L 80 30 Q 86 30 86 39 Q 86 48 80 48 L 68 48 M 74 48 L 86 68"/>
+        </g>
+      </svg>
+      <p class="prov-login-eyebrow">Acceso privado</p>
+      <h1 class="prov-login-title">Panel de <em>Proveedores</em></h1>
+      <p class="prov-login-desc">Esta sección es de uso exclusivo de Mayra Ramírez Event Studio.</p>
+
+      <div class="prov-login-form">
+        <div class="form-group">
+          <label for="loginEmail">Correo electrónico</label>
+          <input type="email" id="loginEmail" placeholder="tucorreo@email.com" autocomplete="username" />
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Contraseña</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+        <span class="form-error" id="loginError"></span>
+        <button type="button" class="btn btn-gold btn-full" id="loginBtn">Iniciar sesión</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       PANEL DE PROVEEDORES — oculto hasta autenticar
+  ═══════════════════════════════════════════════ -->
+  <section class="section prov-panel" id="provPanel" hidden>
+    <div class="container">
+
+      <div class="prov-panel-header">
+        <div>
+          <p class="section-eyebrow">Panel privado</p>
+          <h2 class="section-title">Mis <em>Proveedores</em></h2>
+        </div>
+        <button type="button" class="btn btn-outline-dark" id="logoutBtn">Cerrar sesión</button>
+      </div>
+
+      <!-- Formulario agregar/editar proveedor -->
+      <div class="prov-form-wrapper">
+        <h3 class="prov-form-title" id="formTitle">Agregar nuevo proveedor</h3>
+        <div class="prov-form-grid">
+          <div class="form-group">
+            <label for="pNombre">Nombre / Empresa *</label>
+            <input type="text" id="pNombre" placeholder="Ej: Sonido Vallenato Express" />
+          </div>
+          <div class="form-group">
+            <label for="pServicio">Servicio que ofrece *</label>
+            <input type="text" id="pServicio" placeholder="Ej: Sonido y DJ" />
+          </div>
+          <div class="form-group">
+            <label for="pTelefono">Teléfono / WhatsApp</label>
+            <input type="tel" id="pTelefono" placeholder="+57 300 000 0000" />
+          </div>
+          <div class="form-group">
+            <label for="pTarifa">Tarifa / Rango de precio</label>
+            <input type="text" id="pTarifa" placeholder="Ej: $500.000 - $800.000" />
+          </div>
+          <div class="form-group prov-form-full">
+            <label for="pNotas">Notas privadas</label>
+            <textarea id="pNotas" rows="3" placeholder="Calidad, recomendación, observaciones..."></textarea>
+          </div>
+        </div>
+        <div class="prov-form-actions">
+          <button type="button" class="btn btn-gold" id="guardarBtn">Guardar proveedor</button>
+          <button type="button" class="btn btn-outline-dark" id="cancelarEdicionBtn" hidden>Cancelar edición</button>
+        </div>
+      </div>
+
+      <!-- Lista de proveedores -->
+      <div class="prov-list-wrapper">
+        <div class="prov-list-header">
+          <h3>Proveedores guardados</h3>
+          <input type="text" id="buscarProveedor" class="prov-search" placeholder="Buscar por nombre o servicio..." />
+        </div>
+        <div id="provLista" class="prov-list"></div>
+        <p class="prov-vacio" id="provVacio" hidden>Aún no has agregado ningún proveedor. Usa el formulario de arriba para comenzar.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <script type="module" src="js/proveedores.js?v=1"></script>
+</body>
+</html>

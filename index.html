@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=5" />
+  <link rel="stylesheet" href="css/styles.css?v=8" />
 </head>
 <body>
 
@@ -58,13 +58,15 @@
         <li role="none"><a href="#servicios"  role="menuitem" class="nav-link">Servicios</a></li>
         <li role="none"><a href="#portafolio" role="menuitem" class="nav-link">Portafolio</a></li>
         <li role="none"><a href="#galeria"    role="menuitem" class="nav-link">Galería</a></li>
+        <li role="none"><a href="proveedores.html" role="menuitem" class="nav-link" style="opacity:.6;font-size:.75rem;">🔒 Acceso privado</a></li>
         <li role="none"><a href="#contacto"   role="menuitem" class="nav-link nav-cta">Cotizar</a></li>
       </ul>
     </div>
   </nav>
 
-  <!-- HERO -->
-  <section class="hero" id="inicio">
+  <!-- HERO PREMIUM — dos columnas -->
+  <section class="hero hero-v2" id="inicio">
+    <!-- Capas de fondo -->
     <div class="hero-bg">
       <div class="hero-particles" id="particles"></div>
       <div class="hero-gradient"></div>
@@ -72,54 +74,93 @@
       <div class="hero-orb hero-orb-1" data-depth="0.04"></div>
       <div class="hero-orb hero-orb-2" data-depth="0.08"></div>
       <div class="hero-orb hero-orb-3" data-depth="0.03"></div>
-      <svg class="hero-ring hero-ring-1" data-depth="0.05" viewBox="0 0 200 200" aria-hidden="true">
-        <circle cx="100" cy="100" r="90" fill="none" stroke="currentColor" stroke-width="0.6"/>
-        <circle cx="100" cy="100" r="70" fill="none" stroke="currentColor" stroke-width="0.4"/>
-      </svg>
-      <svg class="hero-ring hero-ring-2" data-depth="0.07" viewBox="0 0 200 200" aria-hidden="true">
-        <circle cx="100" cy="100" r="90" fill="none" stroke="currentColor" stroke-width="0.6"/>
-      </svg>
     </div>
-    <div class="hero-content" id="heroContent">
-      <div class="hero-monogram-wrap">
-        <svg class="hero-monogram" viewBox="0 0 100 100" aria-hidden="true">
-          <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" stroke-width="0.7"/>
-          <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M 20 68 L 20 30 L 34 50 L 48 30" />
-            <path d="M 48 30 L 62 68" />
-            <path d="M 40 56 L 56 56" />
-            <path d="M 68 68 L 68 30 L 80 30 Q 86 30 86 39 Q 86 48 80 48 L 68 48 M 74 48 L 86 68" />
-          </g>
-        </svg>
-      </div>
-      <p class="hero-eyebrow">El Cerrito · Valle del Cauca · Colombia</p>
-      <h1 class="hero-title">
-        <span class="hero-title-main">Mayra Ramírez</span>
-        <span class="hero-title-sub">EVENT STUDIO</span>
-      </h1>
-      <p class="hero-tagline">Transformamos tus momentos especiales<br>en experiencias que perduran para siempre</p>
-      <p class="hero-slogan">Seriedad · Responsabilidad · Oportunidad</p>
-      <div class="hero-actions">
-        <a href="#contacto" class="btn btn-gold">Solicitar cotización</a>
-        <a href="#portafolio" class="btn btn-outline">Ver portafolio</a>
-      </div>
-      <div class="hero-stats">
-        <div class="hero-stat">
-          <span class="hero-stat-num">5+</span>
-          <span class="hero-stat-label">Años</span>
+
+    <!-- Contenido en dos columnas -->
+    <div class="hero-v2-inner" id="heroContent">
+
+      <!-- COLUMNA IZQUIERDA: texto -->
+      <div class="hero-v2-left">
+
+        <!-- Monograma pequeño + eyebrow -->
+        <div class="hero-v2-brand">
+          <svg class="hero-v2-mono" viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" stroke-width="1.2"/>
+            <g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M 20 68 L 20 30 L 34 50 L 48 30"/>
+              <path d="M 48 30 L 62 68"/>
+              <path d="M 40 56 L 56 56"/>
+              <path d="M 68 68 L 68 30 L 80 30 Q 86 30 86 39 Q 86 48 80 48 L 68 48 M 74 48 L 86 68"/>
+            </g>
+          </svg>
+          <div class="hero-v2-brand-text">
+            <span class="hero-v2-name">Mayra Ramírez</span>
+            <span class="hero-v2-studio">EVENT STUDIO</span>
+            <span class="hero-v2-location">El Cerrito · Valle del Cauca · Colombia</span>
+          </div>
         </div>
-        <div class="hero-stat-divider"></div>
-        <div class="hero-stat">
-          <span class="hero-stat-num">Valle</span>
-          <span class="hero-stat-label">del Cauca</span>
+
+        <!-- Línea decorativa -->
+        <div class="hero-v2-divider" aria-hidden="true"></div>
+
+        <!-- Titular principal -->
+        <h1 class="hero-v2-title">
+          Creamos experiencias
+          <em>que se sienten,<br>se viven y se recuerdan</em>
+        </h1>
+
+        <!-- Descripción -->
+        <p class="hero-v2-desc">Transformamos tus ideas en momentos únicos con planificación, pasión y perfección en cada detalle.</p>
+
+        <!-- Badge de experiencia -->
+        <div class="hero-v2-badge">
+          <div class="badge-medal" aria-hidden="true">
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+              <circle cx="18" cy="18" r="16" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M18 10l2.09 4.26L25 15.27l-3.5 3.41.83 4.82L18 21.19l-4.33 2.31.83-4.82L11 15.27l4.91-.71L18 10z" fill="currentColor" opacity=".8"/>
+            </svg>
+          </div>
+          <div>
+            <span class="badge-num">5+</span>
+            <span class="badge-label">años de experiencia</span>
+            <span class="badge-sub">Convirtiendo sueños en celebraciones inolvidables.</span>
+          </div>
         </div>
-        <div class="hero-stat-divider"></div>
-        <div class="hero-stat">
-          <span class="hero-stat-num">100%</span>
-          <span class="hero-stat-label">Dedicación</span>
+
+        <!-- Botones CTA -->
+        <div class="hero-v2-actions">
+          <a href="#contacto" class="btn btn-gold">Solicitar Cotización</a>
+          <a href="#portafolio" class="btn btn-outline">Ver Portafolio</a>
+        </div>
+
+        <!-- Eslogan -->
+        <p class="hero-v2-slogan">Seriedad · Responsabilidad · Oportunidad</p>
+
+      </div>
+
+      <!-- COLUMNA DERECHA: foto -->
+      <div class="hero-v2-right">
+        <div class="hero-photo-wrap">
+          <!-- Marco circular luminoso -->
+          <div class="hero-photo-glow" aria-hidden="true"></div>
+          <div class="hero-photo-ring hero-photo-ring-1" aria-hidden="true"></div>
+          <div class="hero-photo-ring hero-photo-ring-2" aria-hidden="true"></div>
+          <!-- Partícula decorativa dorada -->
+          <div class="hero-photo-dot hero-photo-dot-1" aria-hidden="true"></div>
+          <div class="hero-photo-dot hero-photo-dot-2" aria-hidden="true"></div>
+          <div class="hero-photo-dot hero-photo-dot-3" aria-hidden="true"></div>
+          <!-- Foto sin fondo -->
+          <img
+            src="assets/images/mayra.png"
+            alt="Mayra Ramírez — organizadora de eventos profesional en El Cerrito, Valle del Cauca"
+            class="hero-photo-img"
+            loading="eager"
+          />
         </div>
       </div>
+
     </div>
+
     <a href="#nosotros" class="hero-scroll" aria-label="Desplazar hacia abajo">
       <span class="hero-scroll-line"></span>
       <span class="hero-scroll-text">Descubrir</span>
@@ -614,6 +655,7 @@
       <div class="container">
         <p class="footer-copy">&copy; <span id="footerYear"></span> Mayra Ramírez Event Studio. Todos los derechos reservados.</p>
         <p class="footer-location">El Cerrito, Valle del Cauca, Colombia</p>
+        <a href="proveedores.html" class="footer-location" style="opacity:.5;">🔒 Acceso privado</a>
       </div>
     </div>
   </footer>
@@ -682,6 +724,6 @@
   }
   </script>
 
-  <script src="js/app.js?v=5"></script>
+  <script src="js/app.js?v=8"></script>
 </body>
 </html>
