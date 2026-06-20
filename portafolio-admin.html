@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a1628" />
+  <meta name="robots" content="noindex, nofollow" />
+  <script>
+    (function() {
+      var saved = localStorage.getItem('mr-theme');
+      if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    })();
+  </script>
+  <title>Panel de Portafolio | Mayra Ramírez Event Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css?v=8" />
+  <link rel="stylesheet" href="css/proveedores.css?v=1" />
+  <style>
+    /* ── PORTAFOLIO ADMIN — estilos adicionales ── */
+
+    .porto-admin-tabs {
+      display: flex;
+      gap: .5rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--gray-200);
+      padding-bottom: 0;
+    }
+
+    .porto-tab-btn {
+      font-family: var(--font-sans);
+      font-size: .8125rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: .75rem 1.5rem;
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      border: 1px solid transparent;
+      border-bottom: none;
+      color: var(--gray-600);
+      background: transparent;
+      position: relative;
+      bottom: -1px;
+      transition: all var(--dur);
+    }
+
+    .porto-tab-btn.active {
+      background: var(--white);
+      color: var(--gold);
+      border-color: var(--gray-200);
+      border-bottom-color: var(--white);
+    }
+
+    [data-theme="dark"] .porto-tab-btn.active {
+      background: var(--off-white);
+      border-bottom-color: var(--off-white);
+    }
+
+    .porto-tab-panel { display: none; }
+    .porto-tab-panel.active { display: block; }
+
+    /* Upload de fotos */
+    .foto-upload-area {
+      border: 2px dashed var(--gray-200);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color var(--dur), background var(--dur);
+      position: relative;
+      background: var(--gray-100);
+    }
+
+    .foto-upload-area:hover,
+    .foto-upload-area.drag-over {
+      border-color: var(--gold);
+      background: rgba(201,168,76,.05);
+    }
+
+    .foto-upload-area input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .foto-upload-icon { font-size: 2.5rem; margin-bottom: .75rem; display: block; }
+
+    .foto-upload-label {
+      font-size: .9375rem;
+      font-weight: 600;
+      color: var(--navy);
+      display: block;
+      margin-bottom: .375rem;
+    }
+
+    .foto-upload-hint {
+      font-size: .8125rem;
+      color: var(--gray-400);
+    }
+
+    /* Preview de fotos */
+    .fotos-preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: .75rem;
+      margin-top: 1.25rem;
+    }
+
+    .foto-preview-item {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 2px solid var(--gray-200);
+    }
+
+    .foto-preview-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .foto-preview-item.uploading::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(10,22,40,.6);
+    }
+
+    .foto-preview-item.uploading::before {
+      content: '⏳';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      z-index: 1;
+    }
+
+    .foto-preview-item.done {
+      border-color: #2ea843;
+    }
+
+    .foto-preview-item.error {
+      border-color: #e53935;
+    }
+
+    .foto-remove-btn {
+      position: absolute;
+      top: .25rem;
+      right: .25rem;
+      width: 22px;
+      height: 22px;
+      background: rgba(229,57,53,.85);
+      color: white;
+      border-radius: 50%;
+      font-size: .75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+      line-height: 1;
+      z-index: 2;
+      transition: background var(--dur);
+    }
+
+    .foto-remove-btn:hover { background: #c62828; }
+
+    /* Barra de progreso */
+    .upload-progress {
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .upload-progress.visible { display: block; }
+
+    .upload-progress-bar {
+      height: 4px;
+      background: var(--gray-200);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: .5rem;
+    }
+
+    .upload-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), var(--gold-light));
+      border-radius: 2px;
+      transition: width .3s ease;
+    }
+
+    .upload-progress-text {
+      font-size: .8125rem;
+      color: var(--gray-600);
+      text-align: center;
+    }
+
+    /* Video hint */
+    .video-hint-box {
+      background: rgba(201,168,76,.08);
+      border: 1px solid rgba(201,168,76,.2);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.25rem;
+      margin-top: .5rem;
+      font-size: .8125rem;
+      color: var(--gray-600);
+      line-height: 1.65;
+    }
+
+    .video-hint-box strong { color: var(--navy); }
+
+    .video-hint-steps {
+      margin: .5rem 0 0 0;
+      padding-left: 1.25rem;
+    }
+
+    .video-hint-steps li { margin-bottom: .25rem; }
+
+    /* Lista de eventos en el admin */
+    .porto-admin-card {
+      display: grid;
+      grid-template-columns: 80px 1fr auto;
+      gap: 1rem;
+      align-items: start;
+      padding: 1.25rem 1.5rem;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      transition: border-color var(--dur), box-shadow var(--dur);
+      margin-bottom: 1rem;
+    }
+
+    .porto-admin-card:hover {
+      border-color: rgba(201,168,76,.35);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .porto-admin-thumb {
+      width: 80px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      background: var(--gray-200);
+    }
+
+    .porto-admin-thumb.no-img {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: var(--gray-400);
+    }
+
+    .porto-admin-name {
+      font-family: var(--font-display);
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--navy);
+      margin-bottom: .2rem;
+    }
+
+    .porto-admin-meta {
+      font-size: .8125rem;
+      color: var(--gray-400);
+      display: flex;
+      gap: .75rem;
+      flex-wrap: wrap;
+    }
+
+    .porto-admin-fotos-count {
+      display: inline-block;
+      font-size: .6875rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--gold);
+      background: rgba(201,168,76,.1);
+      padding: .2rem .6rem;
+      border-radius: 100px;
+      margin-top: .35rem;
+    }
+
+    /* Status messages */
+    .status-msg {
+      padding: .875rem 1.25rem;
+      border-radius: var(--radius-md);
+      font-size: .9rem;
+      font-weight: 600;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .status-msg.visible { display: block; }
+    .status-msg.success { background: rgba(46,168,67,.12); border: 1px solid rgba(46,168,67,.3); color: #1a7a35; }
+    .status-msg.error   { background: rgba(229,57,53,.08); border: 1px solid rgba(229,57,53,.25); color: #c62828; }
+    .status-msg.info    { background: rgba(201,168,76,.1); border: 1px solid rgba(201,168,76,.25); color: #7a5c1e; }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .porto-admin-tabs { overflow-x: auto; white-space: nowrap; }
+      .porto-admin-card { grid-template-columns: 1fr; }
+      .porto-admin-thumb { width: 100%; height: 120px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar scrolled" id="navbar" role="navigation" aria-label="Navegación principal">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo">
+        <svg class="logo-monogram" viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" stroke-width="1"/>
+          <g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M 20 68 L 20 30 L 34 50 L 48 30" />
+            <path d="M 48 30 L 62 68" />
+            <path d="M 40 56 L 56 56" />
+            <path d="M 68 68 L 68 30 L 80 30 Q 86 30 86 39 Q 86 48 80 48 L 68 48 M 74 48 L 86 68" />
+          </g>
+        </svg>
+        <span class="logo-text">
+          <span class="logo-mayra">Mayra Ramírez</span>
+          <span class="logo-studio">EVENT STUDIO</span>
+        </span>
+      </a>
+      <ul class="nav-menu" role="menubar" style="display:flex; gap:1rem;">
+        <li role="none"><a href="proveedores.html" role="menuitem" class="nav-link">🔒 Proveedores</a></li>
+        <li role="none"><a href="index.html" role="menuitem" class="nav-link">← Volver al sitio</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════
+       PANTALLA DE LOGIN
+  ═══════════════════════════════════════════════ -->
+  <section class="prov-login-screen" id="loginScreen">
+    <div class="prov-login-card">
+      <svg class="prov-login-mono" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M 20 68 L 20 30 L 34 50 L 48 30"/>
+          <path d="M 48 30 L 62 68"/>
+          <path d="M 40 56 L 56 56"/>
+          <path d="M 68 68 L 68 30 L 80 30 Q 86 30 86 39 Q 86 48 80 48 L 68 48 M 74 48 L 86 68"/>
+        </g>
+      </svg>
+      <p class="prov-login-eyebrow">Acceso privado</p>
+      <h1 class="prov-login-title">Panel de <em>Portafolio</em></h1>
+      <p class="prov-login-desc">Sube fotos y videos de tus eventos para mostrarlos en el sitio público.</p>
+      <div class="prov-login-form">
+        <div class="form-group">
+          <label for="loginEmail">Correo electrónico</label>
+          <input type="email" id="loginEmail" placeholder="tucorreo@email.com" autocomplete="username" />
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Contraseña</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+        <span class="form-error" id="loginError"></span>
+        <button type="button" class="btn btn-gold btn-full" id="loginBtn">Iniciar sesión</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       PANEL PRINCIPAL — oculto hasta autenticar
+  ═══════════════════════════════════════════════ -->
+  <section class="section prov-panel" id="provPanel" hidden>
+    <div class="container">
+
+      <!-- Cabecera -->
+      <div class="prov-panel-header">
+        <div>
+          <p class="section-eyebrow">Panel privado</p>
+          <h2 class="section-title">Mi <em>Portafolio</em></h2>
+        </div>
+        <button type="button" class="btn btn-outline-dark" id="logoutBtn">Cerrar sesión</button>
+      </div>
+
+      <!-- Pestañas -->
+      <div class="porto-admin-tabs">
+        <button type="button" class="porto-tab-btn active" data-tab="nuevo">➕ Agregar evento</button>
+        <button type="button" class="porto-tab-btn" data-tab="lista">📋 Mis eventos</button>
+      </div>
+
+      <!-- ── TAB: AGREGAR EVENTO ── -->
+      <div class="porto-tab-panel active" id="tab-nuevo">
+        <div class="prov-form-wrapper">
+          <h3 class="prov-form-title" id="formTitle">Nuevo evento en el portafolio</h3>
+
+          <div class="prov-form-grid">
+            <!-- Nombre del evento -->
+            <div class="form-group">
+              <label for="eNombre">Nombre del evento *</label>
+              <input type="text" id="eNombre" placeholder="Ej: Boda Valentina & Carlos" />
+            </div>
+
+            <!-- Tipo de evento -->
+            <div class="form-group">
+              <label for="eTipo">Tipo de evento *</label>
+              <select id="eTipo">
+                <option value="">Selecciona un tipo</option>
+                <option value="Matrimonio">💍 Matrimonio</option>
+                <option value="Quince Años">👑 Quince Años</option>
+                <option value="Cumpleaños">🎂 Cumpleaños</option>
+                <option value="Evento Empresarial">🏢 Evento Empresarial</option>
+                <option value="Feria / Expo">🎪 Feria / Expo</option>
+                <option value="Lanzamiento de Marca">🚀 Lanzamiento de Marca</option>
+                <option value="Institucional">🏛️ Institucional</option>
+                <option value="Celebración Familiar">🥂 Celebración Familiar</option>
+                <option value="Otro">✨ Otro</option>
+              </select>
+            </div>
+
+            <!-- Ciudad -->
+            <div class="form-group">
+              <label for="eCiudad">Ciudad *</label>
+              <input type="text" id="eCiudad" placeholder="Ej: El Cerrito, Valle del Cauca" />
+            </div>
+
+            <!-- Fecha -->
+            <div class="form-group">
+              <label for="eFecha">Fecha del evento *</label>
+              <input type="date" id="eFecha" />
+            </div>
+
+            <!-- Descripción -->
+            <div class="form-group prov-form-full">
+              <label for="eDescripcion">Descripción breve</label>
+              <textarea id="eDescripcion" rows="3" placeholder="Cuéntanos sobre este evento, el ambiente, los detalles especiales..."></textarea>
+            </div>
+          </div>
+
+          <!-- ── FOTOS ── -->
+          <div style="margin-top: 1.5rem;">
+            <p class="prov-form-title" style="font-size:1rem; margin-bottom:.75rem;">📸 Fotos del evento</p>
+
+            <div class="foto-upload-area" id="fotoUploadArea">
+              <input type="file" id="fotoInput" accept="image/*" multiple />
+              <span class="foto-upload-icon">🖼️</span>
+              <span class="foto-upload-label">Haz clic aquí o arrastra tus fotos</span>
+              <span class="foto-upload-hint">JPG, PNG o WEBP · Máximo 10 fotos por evento · 10 MB por foto</span>
+            </div>
+
+            <div class="upload-progress" id="uploadProgress">
+              <div class="upload-progress-bar">
+                <div class="upload-progress-fill" id="uploadProgressFill" style="width:0%"></div>
+              </div>
+              <p class="upload-progress-text" id="uploadProgressText">Subiendo fotos...</p>
+            </div>
+
+            <div class="fotos-preview-grid" id="fotosPreviewGrid"></div>
+          </div>
+
+          <!-- ── VIDEO ── -->
+          <div style="margin-top: 1.5rem;">
+            <p class="prov-form-title" style="font-size:1rem; margin-bottom:.75rem;">🎬 Video del evento (opcional)</p>
+            <div class="form-group">
+              <label for="eVideoUrl">Link de YouTube</label>
+              <input type="url" id="eVideoUrl" placeholder="Ej: https://www.youtube.com/watch?v=abc123" />
+            </div>
+            <div class="video-hint-box">
+              <strong>¿Cómo subir el video sin que aparezca en búsquedas?</strong>
+              <ol class="video-hint-steps">
+                <li>Abre <strong>YouTube</strong> y haz clic en el botón "+" para subir el video.</li>
+                <li>En "Visibilidad", elige <strong>"No listado"</strong> — solo quien tenga el link puede verlo.</li>
+                <li>Copia el link del video y pégalo en el campo de arriba.</li>
+              </ol>
+            </div>
+          </div>
+
+          <!-- Mensaje de estado -->
+          <div class="status-msg" id="statusMsg"></div>
+
+          <!-- Botones -->
+          <div class="prov-form-actions" style="margin-top: 2rem;">
+            <button type="button" class="btn btn-gold" id="guardarEventoBtn">
+              ✨ Publicar evento en el portafolio
+            </button>
+            <button type="button" class="btn btn-outline-dark" id="cancelarEdicionBtn" hidden>
+              Cancelar edición
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TAB: LISTA DE EVENTOS ── -->
+      <div class="porto-tab-panel" id="tab-lista">
+        <div class="prov-list-wrapper">
+          <div class="prov-list-header">
+            <h3>Eventos publicados</h3>
+            <input type="text" id="buscarEvento" class="prov-search" placeholder="Buscar evento..." />
+          </div>
+          <div id="eventosList"></div>
+          <p class="prov-vacio" id="eventosVacio" hidden>
+            Aún no has publicado ningún evento. Usa la pestaña "Agregar evento" para comenzar.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <script type="module" src="js/portafolio-admin.js?v=1"></script>
+</body>
+</html>

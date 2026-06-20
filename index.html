@@ -25,6 +25,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css?v=8" />
+  <link rel="stylesheet" href="css/portafolio.css?v=1" />
 </head>
 <body>
 
@@ -286,22 +287,22 @@
     </div>
   </section>
 
-  <!-- PORTAFOLIO -->
-  <section class="section portafolio" id="portafolio">
-    <div class="container">
-      <div class="section-header">
-        <p class="section-eyebrow">Nuestro trabajo</p>
-        <h2 class="section-title">Próximos <em>eventos</em></h2>
-        <p class="section-subtitle">Estamos comenzando este emocionante camino. Aquí irán apareciendo los eventos que realicemos — ¡muy pronto!</p>
-      </div>
-      <div class="portafolio-vacio">
-        <div class="porto-vacio-icon">🎉</div>
-        <h3 class="porto-vacio-title">¡El primer evento está por llegar!</h3>
-        <p class="porto-vacio-desc">Cuando realices tu primer evento, este espacio se llenará con fotos, descripción y todos los detalles de ese momento especial.</p>
-        <a href="#contacto" class="btn btn-gold">Sé el primero en cotizar</a>
+  <!-- PORTAFOLIO — dinámico desde Firestore -->
+<section class="section portafolio" id="portafolio">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-eyebrow">Nuestro trabajo</p>
+      <h2 class="section-title">Eventos <em>realizados</em></h2>
+      <p class="section-subtitle">Cada celebración que organizamos es única. Aquí encontrarás algunos de nuestros eventos más especiales.</p>
+    </div>
+    <div id="portafolioContenido">
+      <div style="text-align:center;padding:3rem 1rem;color:var(--gray-400);">
+        <div style="font-size:2rem;margin-bottom:.75rem;">✨</div>
+        <p>Cargando portafolio...</p>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
   <!-- ESTADÍSTICAS -->
   <section class="section estadisticas" id="estadisticas">
@@ -725,5 +726,6 @@
   </script>
 
   <script src="js/app.js?v=8"></script>
+  <script type="module" src="js/portafolio-publico.js?v=1"></script>
 </body>
 </html>
