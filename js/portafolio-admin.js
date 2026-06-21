@@ -125,7 +125,7 @@ function agregarFotos(files) {
 
   Array.from(files).forEach(file => {
     // Aceptar cualquier tipo de imagen incluyendo screenshots
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith('image/') && file.type !== '') {
       mostrarStatus(`"${file.name}" no es una imagen válida.`, 'error');
       return;
     }
