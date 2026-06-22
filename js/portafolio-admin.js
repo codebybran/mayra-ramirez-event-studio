@@ -1,6 +1,6 @@
 // ════════════════════════════════════════════════════
 // PANEL DE PORTAFOLIO — portafolio-admin.js
-// Login con Firebase Auth + fotos en Imgur + datos en Firestore
+// Login Firebase Auth + fotos en base64 en Firestore
 // ════════════════════════════════════════════════════
 
 import { auth, db } from "./firebase-config.js";
@@ -19,8 +19,6 @@ import {
   query,
   orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-const IMGUR_CLIENT_ID = '546c25a59c58ad7';
 
 // ─── DOM ─────────────────────────────────────────────
 const loginScreen        = document.getElementById('loginScreen');
@@ -53,7 +51,7 @@ const buscarEvento       = document.getElementById('buscarEvento');
 // ─── Estado ──────────────────────────────────────────
 let editandoId         = null;
 let eventosCache       = [];
-let fotosSeleccionadas = [];
+let fotosSeleccionadas = []; // { file, previewUrl, itemEl }
 
 // ─── PESTAÑAS ────────────────────────────────────────
 document.querySelectorAll('.porto-tab-btn').forEach(btn => {
@@ -85,7 +83,6 @@ loginBtn.addEventListener('click', async () => {
 });
 
 loginPassword.addEventListener('keydown', e => { if (e.key === 'Enter') loginBtn.click(); });
-
 logoutBtn.addEventListener('click', () => signOut(auth));
 
 onAuthStateChanged(auth, user => {
@@ -101,18 +98,17 @@ onAuthStateChanged(auth, user => {
   }
 });
 
-// ─── FOTOS ───────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
+// FOTOS — selección, drag & drop y compresión
+// ═══════════════════════════════════════════════════════
+
 fotoInput.addEventListener('change', e => agregarFotos(e.target.files));
 
 fotoUploadArea.addEventListener('dragover', e => {
   e.preventDefault();
   fotoUploadArea.classList.add('drag-over');
 });
-
-fotoUploadArea.addEventListener('dragleave', () => {
-  fotoUploadArea.classList.remove('drag-over');
-});
-
+fotoUploadArea.addEventListener('dragleave', () => fotoUploadArea.classList.remove('drag-over'));
 fotoUploadArea.addEventListener('drop', e => {
   e.preventDefault();
   fotoUploadArea.classList.remove('drag-over');
@@ -120,21 +116,15 @@ fotoUploadArea.addEventListener('drop', e => {
 });
 
 function agregarFotos(files) {
-  const MAX_FOTOS = 50;
-  const MAX_SIZE  = 10 * 1024 * 1024;
+  const MAX_FOTOS = 20;
 
   Array.from(files).forEach(file => {
-    // Aceptar cualquier tipo de imagen incluyendo screenshots
-    if (!file.type.startsWith('image/') && file.type !== '') {
+    if (!file.type.startsWith('image/')) {
       mostrarStatus(`"${file.name}" no es una imagen válida.`, 'error');
       return;
     }
-    if (file.size > MAX_SIZE) {
-      mostrarStatus(`"${file.name}" supera los 10 MB.`, 'error');
-      return;
-    }
     if (fotosSeleccionadas.length >= MAX_FOTOS) {
-      mostrarStatus('Máximo 50 fotos por evento.', 'error');
+      mostrarStatus('Máximo 20 fotos por evento.', 'error');
       return;
     }
 
@@ -143,7 +133,7 @@ function agregarFotos(files) {
       const previewUrl = e.target.result;
       const idx = fotosSeleccionadas.length;
       const itemEl = crearPreviewItem(previewUrl, idx);
-      fotosSeleccionadas.push({ file, previewUrl, imgurUrl: null, itemEl });
+      fotosSeleccionadas.push({ file, previewUrl, itemEl });
       fotosPreviewGrid.appendChild(itemEl);
     };
     reader.readAsDataURL(file);
@@ -169,65 +159,84 @@ function crearPreviewItem(src, index) {
   return div;
 }
 
-// ─── IMGUR ────────────────────────────────────────────
-async function subirFotoImgur(file) {
-  const formData = new FormData();
-  formData.append('image', file);
-  const res = await fetch('https://api.imgur.com/3/image', {
-    method: 'POST',
-    headers: { Authorization: `Client-ID ${IMGUR_CLIENT_ID}` },
-    body: formData
+// ═══════════════════════════════════════════════════════
+// COMPRIMIR Y CONVERTIR A BASE64
+// Reduce el tamaño para que quepan en Firestore (max 1MB por foto)
+// ═══════════════════════════════════════════════════════
+
+function comprimirFoto(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        // Máximo 1200px de ancho manteniendo proporción
+        const MAX = 1200;
+        let w = img.width;
+        let h = img.height;
+        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+        if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+        canvas.width  = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        // Calidad 0.75 — buen balance calidad/tamaño
+        const base64 = canvas.toDataURL('image/jpeg', 0.75);
+        resolve(base64);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
   });
-  if (!res.ok) throw new Error(`Error Imgur: ${res.status}`);
-  const data = await res.json();
-  if (!data.success) throw new Error('Imgur no retornó éxito.');
-  return data.data.link;
 }
 
-async function subirTodasLasFotos() {
+async function procesarTodasLasFotos() {
   const total = fotosSeleccionadas.length;
   if (total === 0) return [];
 
   uploadProgress.classList.add('visible');
   uploadProgressFill.style.width = '0%';
-  uploadProgressText.textContent = `Subiendo foto 0 de ${total}...`;
+  uploadProgressText.textContent = `Procesando foto 0 de ${total}...`;
 
-  const urls = [];
+  const base64s = [];
   for (let i = 0; i < total; i++) {
     const fotoObj = fotosSeleccionadas[i];
     fotoObj.itemEl.classList.add('uploading');
     try {
-      const url = await subirFotoImgur(fotoObj.file);
-      fotoObj.imgurUrl = url;
-      urls.push(url);
+      const b64 = await comprimirFoto(fotoObj.file);
+      base64s.push(b64);
       fotoObj.itemEl.classList.remove('uploading');
       fotoObj.itemEl.classList.add('done');
     } catch (err) {
       fotoObj.itemEl.classList.remove('uploading');
       fotoObj.itemEl.classList.add('error');
-      throw new Error(`No se pudo subir la foto ${i + 1}.`);
+      throw new Error(`No se pudo procesar la foto ${i + 1}.`);
     }
     const pct = Math.round(((i + 1) / total) * 100);
     uploadProgressFill.style.width = `${pct}%`;
-    uploadProgressText.textContent = `Subiendo foto ${i + 1} de ${total}...`;
+    uploadProgressText.textContent = `Procesando foto ${i + 1} de ${total}...`;
   }
 
-  uploadProgressText.textContent = `✅ ${total} foto${total > 1 ? 's' : ''} subida${total > 1 ? 's' : ''} correctamente`;
-  return urls;
+  uploadProgressText.textContent = `✅ ${total} foto${total > 1 ? 's' : ''} listas`;
+  return base64s;
 }
 
 // ─── YOUTUBE ──────────────────────────────────────────
 function procesarUrlYoutube(texto) {
   if (!texto) return [];
-  const lineas = texto.split('\n').map(l => l.trim()).filter(Boolean);
-  return lineas.map(url => {
+  return texto.split('\n').map(l => l.trim()).filter(Boolean).map(url => {
     const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{11})/);
-    if (!match) return null;
-    return `https://www.youtube.com/embed/${match[1]}`;
+    return match ? `https://www.youtube.com/embed/${match[1]}` : null;
   }).filter(Boolean);
 }
 
-// ─── GUARDAR EVENTO ───────────────────────────────────
+// ═══════════════════════════════════════════════════════
+// GUARDAR EVENTO
+// ═══════════════════════════════════════════════════════
+
 guardarEventoBtn.addEventListener('click', async () => {
   const nombre = eNombre.value.trim();
   const tipo   = eTipo.value;
@@ -241,12 +250,20 @@ guardarEventoBtn.addEventListener('click', async () => {
 
   guardarEventoBtn.disabled = true;
   guardarEventoBtn.textContent = 'Guardando...';
-  mostrarStatus('Subiendo fotos, un momento...', 'info');
+  mostrarStatus('Procesando fotos...', 'info');
 
   try {
-    let fotosUrls = [];
+    // Procesar fotos nuevas
+    let fotosNuevas = [];
     if (fotosSeleccionadas.length > 0) {
-      fotosUrls = await subirTodasLasFotos();
+      fotosNuevas = await procesarTodasLasFotos();
+    }
+
+    // Si estamos editando, mantener fotos existentes + agregar nuevas
+    let fotosFinales = fotosNuevas;
+    if (editandoId && fotosNuevas.length === 0) {
+      const evActual = eventosCache.find(x => x.id === editandoId);
+      fotosFinales = evActual ? (evActual.fotos || []) : [];
     }
 
     const videos = procesarUrlYoutube(eVideoUrl.value);
@@ -257,8 +274,8 @@ guardarEventoBtn.addEventListener('click', async () => {
       ciudad,
       fecha,
       descripcion: eDescripcion.value.trim(),
-      fotos: fotosUrls,
-      videos: videos,
+      fotos: fotosFinales,
+      videos,
       actualizado: Date.now()
     };
 
@@ -304,7 +321,10 @@ function limpiarFormulario() {
   statusMsg.classList.remove('visible', 'success', 'error', 'info');
 }
 
-// ─── FIRESTORE ────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
+// FIRESTORE — escuchar eventos
+// ═══════════════════════════════════════════════════════
+
 function escucharEventos() {
   const q = query(collection(db, 'portafolio'), orderBy('fecha', 'desc'));
   onSnapshot(q, snapshot => {
@@ -318,24 +338,15 @@ function escucharEventos() {
 
 function renderizarEventos(lista) {
   eventosList.innerHTML = '';
-
-  if (lista.length === 0) {
-    eventosVacio.hidden = false;
-    return;
-  }
+  if (lista.length === 0) { eventosVacio.hidden = false; return; }
   eventosVacio.hidden = true;
 
   lista.forEach(ev => {
-    const thumbUrl  = ev.fotos && ev.fotos.length > 0 ? ev.fotos[0] : null;
-    const fechaFmt  = ev.fecha ? new Date(ev.fecha + 'T12:00:00').toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Sin fecha';
-    const nFotos    = (ev.fotos || []).length;
-    const nVideos   = (ev.videos || []).length;
-    const tieneVid  = nVideos > 0 || !!ev.videoUrl;
-
-    // Descripción truncada a 120 caracteres
-    const descCorta = ev.descripcion && ev.descripcion.length > 120
-      ? ev.descripcion.slice(0, 120) + '...'
-      : (ev.descripcion || '');
+    const thumbUrl = ev.fotos && ev.fotos.length > 0 ? ev.fotos[0] : null;
+    const fechaFmt = ev.fecha ? new Date(ev.fecha + 'T12:00:00').toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Sin fecha';
+    const nFotos   = (ev.fotos || []).length;
+    const nVideos  = (ev.videos || []).length;
+    const descCorta = ev.descripcion && ev.descripcion.length > 120 ? ev.descripcion.slice(0, 120) + '...' : (ev.descripcion || '');
 
     const card = document.createElement('div');
     card.className = 'porto-admin-card';
@@ -352,7 +363,7 @@ function renderizarEventos(lista) {
           <span>📅 ${fechaFmt}</span>
         </div>
         <span class="porto-admin-fotos-count">
-          ${nFotos} foto${nFotos !== 1 ? 's' : ''}${tieneVid ? ` · 🎬 ${nVideos} video${nVideos !== 1 ? 's' : ''}` : ''}
+          ${nFotos} foto${nFotos !== 1 ? 's' : ''}${nVideos > 0 ? ` · 🎬 ${nVideos} video${nVideos !== 1 ? 's' : ''}` : ''}
         </span>
         ${descCorta ? `<p style="font-size:.875rem;color:var(--gray-600);margin-top:.5rem;line-height:1.5;word-break:break-word;">${escapeHtml(descCorta)}</p>` : ''}
       </div>
@@ -375,14 +386,11 @@ eventosList.addEventListener('click', async e => {
   if (accion === 'editar') {
     const ev = eventosCache.find(x => x.id === id);
     if (!ev) return;
-
     eNombre.value      = ev.nombre || '';
     eTipo.value        = ev.tipo || '';
     eCiudad.value      = ev.ciudad || '';
     eFecha.value       = ev.fecha || '';
     eDescripcion.value = ev.descripcion || '';
-
-    // Convertir embed URLs a watch URLs para mostrar en el campo
     if (ev.videos && ev.videos.length > 0) {
       eVideoUrl.value = ev.videos.map(url => {
         const match = url.match(/embed\/([a-zA-Z0-9_-]{11})/);
@@ -391,13 +399,12 @@ eventosList.addEventListener('click', async e => {
     } else {
       eVideoUrl.value = '';
     }
-
     fotosSeleccionadas = [];
     fotosPreviewGrid.innerHTML = '';
     if (ev.fotos && ev.fotos.length > 0) {
       const nota = document.createElement('p');
       nota.style.cssText = 'font-size:.8125rem;color:var(--gray-400);margin-bottom:.5rem;grid-column:1/-1;';
-      nota.textContent = 'Fotos actuales (agrega nuevas si quieres reemplazarlas):';
+      nota.textContent = 'Fotos actuales (si subes nuevas, reemplazarán estas):';
       fotosPreviewGrid.appendChild(nota);
       ev.fotos.forEach((url, i) => {
         const div = document.createElement('div');
@@ -406,7 +413,6 @@ eventosList.addEventListener('click', async e => {
         fotosPreviewGrid.appendChild(div);
       });
     }
-
     editandoId = id;
     formTitle.textContent = `Editando: ${ev.nombre}`;
     guardarEventoBtn.textContent = 'Guardar cambios';
@@ -432,12 +438,11 @@ eventosList.addEventListener('click', async e => {
 buscarEvento.addEventListener('input', () => {
   const texto = buscarEvento.value.trim().toLowerCase();
   if (!texto) { renderizarEventos(eventosCache); return; }
-  const filtrados = eventosCache.filter(ev =>
+  renderizarEventos(eventosCache.filter(ev =>
     (ev.nombre || '').toLowerCase().includes(texto) ||
     (ev.tipo   || '').toLowerCase().includes(texto) ||
     (ev.ciudad || '').toLowerCase().includes(texto)
-  );
-  renderizarEventos(filtrados);
+  ));
 });
 
 // ─── HELPERS ──────────────────────────────────────────
