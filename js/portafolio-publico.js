@@ -1,5 +1,6 @@
 // ════════════════════════════════════════════════════
-// PORTAFOLIO PÚBLICO — portafolio-publico.js
+// PORTAFOLIO PÚBLICO + GALERÍA — portafolio-publico.js
+// Lee Firestore y renderiza portafolio y galería
 // ════════════════════════════════════════════════════
 
 import { db } from "./firebase-config.js";
@@ -10,7 +11,7 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-document.addEventListener('DOMContentLoaded', () => { cargarPortafolio(); });
+document.addEventListener('DOMContentLoaded', () => { cargarDatos(); });
 
 const tipoEmoji = {
   'Matrimonio': '💍', 'Quince Años': '👑', 'Cumpleaños': '🎂',
@@ -19,89 +20,119 @@ const tipoEmoji = {
   'Celebración Familiar': '🥂', 'Otro': '✨'
 };
 
-async function cargarPortafolio() {
-  const contenedor = document.getElementById('portafolioContenido');
-  if (!contenedor) return;
+// ─── Cargar todos los eventos ─────────────────────────
+async function cargarDatos() {
   try {
     const q = query(collection(db, 'portafolio'), orderBy('fecha', 'desc'));
     const snapshot = await getDocs(q);
-    if (snapshot.empty) { mostrarVacio(contenedor); return; }
     const eventos = [];
     snapshot.forEach(docSnap => { eventos.push({ id: docSnap.id, ...docSnap.data() }); });
-    renderizarPortafolio(contenedor, eventos);
+
+    renderizarPortafolio(eventos);
+    renderizarGaleria(eventos);
   } catch (err) {
-    console.error('Error cargando portafolio:', err);
-    mostrarVacio(contenedor);
+    console.error('Error cargando datos:', err);
+    mostrarVacioPortafolio();
   }
 }
 
-function renderizarPortafolio(contenedor, eventos) {
+// ═══════════════════════════════════════════════════════
+// PORTAFOLIO
+// ═══════════════════════════════════════════════════════
+
+function renderizarPortafolio(eventos) {
+  const contenedor = document.getElementById('portafolioContenido');
+  if (!contenedor) return;
+
+  if (eventos.length === 0) { mostrarVacioPortafolio(); return; }
+
   const tipos = [...new Set(eventos.map(ev => ev.tipo).filter(Boolean))];
 
   contenedor.innerHTML = `
-    <div class="portafolio-filters" id="portafolioFiltros">
+    <div class="portafolio-filters">
       <button class="filter-btn active" data-filtro="todos">Todos</button>
-      ${tipos.map(tipo => `<button class="filter-btn" data-filtro="${escapeHtml(tipo)}">${tipoEmoji[tipo] || '✨'} ${escapeHtml(tipo)}</button>`).join('')}
+      ${tipos.map(tipo => `<button class="filter-btn" data-filtro="${escapeHtml(tipo)}">${tipoEmoji[tipo]||'✨'} ${escapeHtml(tipo)}</button>`).join('')}
     </div>
     <div class="portafolio-grid" id="portafolioGrid">
-      ${eventos.map(ev => crearTarjetaHTML(ev)).join('')}
+      ${eventos.map(ev => tarjetaPortafolioHTML(ev)).join('')}
     </div>
     <div class="porto-modal" id="portoModal" hidden>
       <div class="porto-modal-overlay" id="portoModalOverlay"></div>
-      <div class="porto-modal-content" id="portoModalContent">
-        <button class="porto-modal-close" id="portoModalClose" aria-label="Cerrar">✕</button>
+      <div class="porto-modal-content">
+        <button class="porto-modal-close" id="portoModalClose">✕</button>
         <div id="portoModalBody"></div>
       </div>
     </div>
   `;
 
-  const filtrosBtns = contenedor.querySelectorAll('.filter-btn');
-  const cards       = contenedor.querySelectorAll('.porto-card');
-
-  filtrosBtns.forEach(btn => {
+  // Filtros
+  contenedor.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      filtrosBtns.forEach(b => b.classList.remove('active'));
+      contenedor.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       const filtro = btn.dataset.filtro;
-      cards.forEach(card => {
+      contenedor.querySelectorAll('.porto-card').forEach(card => {
         card.classList.toggle('hidden', filtro !== 'todos' && card.dataset.tipo !== filtro);
       });
     });
   });
 
-  contenedor.querySelectorAll('.porto-card').forEach(card => {
-    card.addEventListener('click', () => {
-      const ev = eventos.find(e => e.id === card.dataset.id);
-      if (ev) abrirModal(ev, contenedor);
-    });
-    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); } });
-  });
-
-  const modal        = contenedor.querySelector('#portoModal');
-  const modalOverlay = contenedor.querySelector('#portoModalOverlay');
-  const modalClose   = contenedor.querySelector('#portoModalClose');
-
+  // Modal
+  const modal     = contenedor.querySelector('#portoModal');
   const cerrarModal = () => {
     modal.hidden = true;
     document.body.style.overflow = '';
-    const iframes = modal.querySelectorAll('iframe');
-    iframes.forEach(iframe => { iframe.src = iframe.src; });
+    modal.querySelectorAll('iframe').forEach(f => { f.src = f.src; });
   };
-
-  modalOverlay.addEventListener('click', cerrarModal);
-  modalClose.addEventListener('click', cerrarModal);
+  contenedor.querySelector('#portoModalOverlay').addEventListener('click', cerrarModal);
+  contenedor.querySelector('#portoModalClose').addEventListener('click', cerrarModal);
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) cerrarModal(); });
+
+  contenedor.querySelectorAll('.porto-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const ev = eventos.find(e => e.id === card.dataset.id);
+      if (ev) abrirModalPortafolio(ev, contenedor);
+    });
+  });
 }
 
-function abrirModal(ev, contenedor) {
-  const modal     = contenedor.querySelector('#portoModal');
-  const modalBody = contenedor.querySelector('#portoModalBody');
-  const fechaFmt  = formatearFecha(ev.fecha);
-  const nFotos    = (ev.fotos || []).length;
-  const videos    = ev.videos || (ev.videoUrl ? [ev.videoUrl] : []);
-  const nVideos   = videos.length;
+function tarjetaPortafolioHTML(ev) {
+  const thumb  = ev.fotos && ev.fotos.length > 0 ? ev.fotos[0] : null;
+  const emoji  = tipoEmoji[ev.tipo] || '✨';
+  const nFotos = (ev.fotos || []).length;
+  const videos = ev.videos || [];
+  const desc   = ev.descripcion && ev.descripcion.length > 120 ? ev.descripcion.slice(0,120)+'…' : (ev.descripcion||'');
 
-  modalBody.innerHTML = `
+  return `
+    <article class="porto-card" data-tipo="${escapeHtml(ev.tipo||'')}" data-id="${ev.id}" tabindex="0" role="button" style="cursor:pointer;">
+      <div class="porto-img">
+        ${thumb
+          ? `<img src="${thumb}" alt="${escapeHtml(ev.nombre)}" loading="lazy" style="width:100%;height:100%;object-fit:cover;" />`
+          : `<div class="porto-img-1" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;">${emoji}</div>`
+        }
+        <div class="porto-overlay"><span class="porto-cat">${emoji} ${escapeHtml(ev.tipo||'')}</span></div>
+      </div>
+      <div class="porto-info">
+        <h3 class="porto-name">${escapeHtml(ev.nombre)}</h3>
+        <div class="porto-meta">
+          <span>📍 ${escapeHtml(ev.ciudad||'')}</span>
+          <span>📅 ${formatearFecha(ev.fecha)}</span>
+          ${nFotos > 0 ? `<span>📸 ${nFotos}</span>` : ''}
+          ${videos.length > 0 ? `<span>🎬 ${videos.length}</span>` : ''}
+        </div>
+        ${desc ? `<p class="porto-desc">${escapeHtml(desc)}</p>` : ''}
+      </div>
+    </article>
+  `;
+}
+
+function abrirModalPortafolio(ev, contenedor) {
+  const modal    = contenedor.querySelector('#portoModal');
+  const body     = contenedor.querySelector('#portoModalBody');
+  const nFotos   = (ev.fotos||[]).length;
+  const videos   = ev.videos || [];
+
+  body.innerHTML = `
     ${nFotos > 0 ? `
       <div class="porto-modal-gallery">
         <div class="porto-modal-gallery-main">
@@ -109,39 +140,28 @@ function abrirModal(ev, contenedor) {
         </div>
         ${nFotos > 1 ? `
           <div class="porto-modal-gallery-thumbs">
-            ${ev.fotos.map((url, i) => `
-              <img src="${url}" alt="Foto ${i+1}" class="porto-gallery-thumb ${i===0?'active':''}" data-url="${url}" />
-            `).join('')}
+            ${ev.fotos.map((url,i) => `<img src="${url}" alt="Foto ${i+1}" class="porto-gallery-thumb ${i===0?'active':''}" data-url="${url}" />`).join('')}
           </div>
         ` : ''}
       </div>
     ` : ''}
-
     <div class="porto-modal-info">
-      <span class="porto-cat">${tipoEmoji[ev.tipo] || '✨'} ${escapeHtml(ev.tipo || '')}</span>
+      <span class="porto-cat">${tipoEmoji[ev.tipo]||'✨'} ${escapeHtml(ev.tipo||'')}</span>
       <h2 class="porto-modal-title">${escapeHtml(ev.nombre)}</h2>
       <div class="porto-meta" style="margin:.75rem 0 1rem;">
-        <span>📍 ${escapeHtml(ev.ciudad || '')}</span>
-        <span>📅 ${fechaFmt}</span>
+        <span>📍 ${escapeHtml(ev.ciudad||'')}</span>
+        <span>📅 ${formatearFecha(ev.fecha)}</span>
         ${nFotos > 0 ? `<span>📸 ${nFotos} foto${nFotos!==1?'s':''}</span>` : ''}
-        ${nVideos > 0 ? `<span>🎬 ${nVideos} video${nVideos!==1?'s':''}</span>` : ''}
+        ${videos.length > 0 ? `<span>🎬 ${videos.length} video${videos.length!==1?'s':''}</span>` : ''}
       </div>
       ${ev.descripcion ? `<p class="porto-desc" style="word-break:break-word;">${escapeHtml(ev.descripcion)}</p>` : ''}
     </div>
-
-    ${nVideos > 0 ? `
+    ${videos.length > 0 ? `
       <div class="porto-modal-videos">
-        ${videos.map((url, i) => `
+        ${videos.map((url,i) => `
           <div class="porto-modal-video">
-            ${nVideos > 1 ? `<p style="font-family:var(--font-display);font-size:1rem;color:var(--navy);margin-bottom:.5rem;padding:0 1.75rem;">🎬 Video ${i+1}</p>` : ''}
-            <iframe
-              src="${url}?rel=0&modestbranding=1"
-              title="Video ${i+1}"
-              frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen
-              loading="lazy"
-            ></iframe>
+            ${videos.length > 1 ? `<p style="font-family:var(--font-display);font-size:1rem;color:var(--navy);margin-bottom:.5rem;padding:0 1.75rem;">🎬 Video ${i+1}</p>` : ''}
+            <iframe src="${url}?rel=0&modestbranding=1" frameborder="0" allowfullscreen loading="lazy"></iframe>
           </div>
         `).join('')}
       </div>
@@ -149,11 +169,11 @@ function abrirModal(ev, contenedor) {
   `;
 
   if (nFotos > 1) {
-    const mainImg = modalBody.querySelector('#portoGalleryMain');
-    modalBody.querySelectorAll('.porto-gallery-thumb').forEach(thumb => {
+    const mainImg = body.querySelector('#portoGalleryMain');
+    body.querySelectorAll('.porto-gallery-thumb').forEach(thumb => {
       thumb.addEventListener('click', () => {
         mainImg.src = thumb.dataset.url;
-        modalBody.querySelectorAll('.porto-gallery-thumb').forEach(t => t.classList.remove('active'));
+        body.querySelectorAll('.porto-gallery-thumb').forEach(t => t.classList.remove('active'));
         thumb.classList.add('active');
       });
     });
@@ -163,56 +183,115 @@ function abrirModal(ev, contenedor) {
   document.body.style.overflow = 'hidden';
 }
 
-function crearTarjetaHTML(ev) {
-  const thumbUrl = ev.fotos && ev.fotos.length > 0 ? ev.fotos[0] : null;
-  const fechaFmt = formatearFecha(ev.fecha);
-  const emoji    = tipoEmoji[ev.tipo] || '✨';
-  const nFotos   = (ev.fotos || []).length;
-  const videos   = ev.videos || (ev.videoUrl ? [ev.videoUrl] : []);
-  const nVideos  = videos.length;
-  const desc     = ev.descripcion && ev.descripcion.length > 120
-    ? ev.descripcion.slice(0, 120) + '…'
-    : (ev.descripcion || '');
-
-  return `
-    <article class="porto-card" data-tipo="${escapeHtml(ev.tipo||'')}" data-id="${ev.id}" tabindex="0" role="button" aria-label="Ver detalles de ${escapeHtml(ev.nombre)}" style="cursor:pointer;">
-      <div class="porto-img">
-        ${thumbUrl
-          ? `<img src="${thumbUrl}" alt="${escapeHtml(ev.nombre)}" loading="lazy" style="width:100%;height:100%;object-fit:cover;" />`
-          : `<div class="porto-img-1" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><span style="font-size:3rem;">${emoji}</span></div>`
-        }
-        <div class="porto-overlay">
-          <span class="porto-cat">${emoji} ${escapeHtml(ev.tipo||'')}</span>
-        </div>
-      </div>
-      <div class="porto-info">
-        <h3 class="porto-name">${escapeHtml(ev.nombre)}</h3>
-        <div class="porto-meta">
-          <span>📍 ${escapeHtml(ev.ciudad||'')}</span>
-          <span>📅 ${fechaFmt}</span>
-          ${nFotos > 0 ? `<span>📸 ${nFotos}</span>` : ''}
-          ${nVideos > 0 ? `<span>🎬 ${nVideos}</span>` : ''}
-        </div>
-        ${desc ? `<p class="porto-desc">${escapeHtml(desc)}</p>` : ''}
-      </div>
-    </article>
-  `;
-}
-
-function mostrarVacio(contenedor) {
+function mostrarVacioPortafolio() {
+  const contenedor = document.getElementById('portafolioContenido');
+  if (!contenedor) return;
   contenedor.innerHTML = `
     <div class="portafolio-vacio">
       <div class="porto-vacio-icon">🎉</div>
       <h3 class="porto-vacio-title">¡El primer evento está por llegar!</h3>
-      <p class="porto-vacio-desc">Cuando realices tu primer evento, este espacio se llenará con fotos y videos de ese momento especial.</p>
+      <p class="porto-vacio-desc">Cuando realices tu primer evento, este espacio se llenará con fotos y todos los detalles.</p>
       <a href="#contacto" class="btn btn-gold">Sé el primero en cotizar</a>
     </div>
   `;
 }
 
+// ═══════════════════════════════════════════════════════
+// GALERÍA — muestra todas las fotos de todos los eventos
+// ═══════════════════════════════════════════════════════
+
+function renderizarGaleria(eventos) {
+  const galeriaGrid = document.getElementById('galeriaGrid');
+  if (!galeriaGrid) return;
+
+  // Recoger todas las fotos de todos los eventos
+  const todasLasFotos = [];
+  eventos.forEach(ev => {
+    (ev.fotos || []).forEach(url => {
+      todasLasFotos.push({ url, evento: ev.nombre, tipo: ev.tipo || '' });
+    });
+  });
+
+  if (todasLasFotos.length === 0) {
+    galeriaGrid.innerHTML = `
+      <div class="galeria-instrucciones">
+        <div class="instruccion-card">
+          <span class="instruccion-num">01</span>
+          <h3>Sube tu primer evento</h3>
+          <p>Entra al panel de portafolio y publica un evento con fotos. Aparecerán aquí automáticamente.</p>
+        </div>
+        <div class="instruccion-card">
+          <span class="instruccion-num">02</span>
+          <h3>Sin límite de fotos</h3>
+          <p>Cada evento puede tener hasta 20 fotos. Todas aparecerán en esta galería.</p>
+        </div>
+        <div class="instruccion-card">
+          <span class="instruccion-num">03</span>
+          <h3>Actualización automática</h3>
+          <p>No necesitas tocar código. Cada foto que subas aparece aquí instantáneamente.</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // Mostrar máximo 12 fotos en la galería (las más recientes)
+  const fotosGaleria = todasLasFotos.slice(0, 12);
+
+  galeriaGrid.innerHTML = fotosGaleria.map((foto, i) => `
+    <button class="galeria-item ${i === 0 ? 'galeria-item--wide' : i === 3 ? 'galeria-item--tall' : ''}"
+      data-index="${i}" aria-label="Ver foto de ${escapeHtml(foto.evento)}">
+      <div class="galeria-img" style="background-image:url('${foto.url}');background-size:cover;background-position:center;width:100%;height:100%;"></div>
+      <div class="galeria-hover">
+        <span>${tipoEmoji[foto.tipo]||'📸'} ${escapeHtml(foto.evento)}</span>
+      </div>
+    </button>
+  `).join('');
+
+  // Lightbox de galería
+  const lightbox     = document.getElementById('lightbox');
+  const lightboxContent = document.getElementById('lightboxContent');
+  const lightboxClose   = document.getElementById('lightboxClose');
+  const lightboxPrev    = document.getElementById('lightboxPrev');
+  const lightboxNext    = document.getElementById('lightboxNext');
+
+  if (!lightbox) return;
+
+  let currentIdx = 0;
+
+  const abrirLightbox = (idx) => {
+    currentIdx = idx;
+    const foto = fotosGaleria[idx];
+    lightboxContent.innerHTML = `<img src="${foto.url}" alt="${escapeHtml(foto.evento)}" style="width:100%;height:100%;object-fit:contain;" />`;
+    lightbox.hidden = false;
+    document.body.style.overflow = 'hidden';
+  };
+
+  const cerrarLightbox = () => {
+    lightbox.hidden = true;
+    document.body.style.overflow = '';
+  };
+
+  galeriaGrid.querySelectorAll('.galeria-item').forEach((btn, i) => {
+    btn.addEventListener('click', () => abrirLightbox(i));
+  });
+
+  lightboxClose?.addEventListener('click', cerrarLightbox);
+  lightbox.addEventListener('click', e => { if (e.target === lightbox) cerrarLightbox(); });
+  lightboxPrev?.addEventListener('click', () => abrirLightbox((currentIdx - 1 + fotosGaleria.length) % fotosGaleria.length));
+  lightboxNext?.addEventListener('click', () => abrirLightbox((currentIdx + 1) % fotosGaleria.length));
+  document.addEventListener('keydown', e => {
+    if (lightbox.hidden) return;
+    if (e.key === 'Escape') cerrarLightbox();
+    if (e.key === 'ArrowLeft') abrirLightbox((currentIdx - 1 + fotosGaleria.length) % fotosGaleria.length);
+    if (e.key === 'ArrowRight') abrirLightbox((currentIdx + 1) % fotosGaleria.length);
+  });
+}
+
+// ─── Helpers ──────────────────────────────────────────
 function formatearFecha(fechaStr) {
   if (!fechaStr) return 'Sin fecha';
-  try { return new Date(fechaStr + 'T12:00:00').toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }); }
+  try { return new Date(fechaStr + 'T12:00:00').toLocaleDateString('es-CO', { year:'numeric', month:'long', day:'numeric' }); }
   catch { return fechaStr; }
 }
 
